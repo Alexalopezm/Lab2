@@ -1,2 +1,5 @@
-# Lab2
-Repositorio del laboratiorio 2 del curso Programacion Bajo Plataformas Abiertas UCR
+### Universidad de Costa Rica
+#### IE 0117 - Programación Bajo Plataformas Abiertas
+##### Laboratorio 2: Scripting y Procesos (segundo ciclo del 2023)
+
+- Alexa López Marcos, B94353
