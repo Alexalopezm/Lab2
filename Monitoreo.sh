@@ -2,6 +2,7 @@
 
 # Verifica si se proporcionan los argumentos correctos.
 if [ $# -ne 2 ]; then
+    echo "Error, ingrese el nombre del proceso y comando para ejecutar"
     echo "Uso: $0 <nombre_del_proceso> <comando_para_ejecutar>"
     exit 1
 fi

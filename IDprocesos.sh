@@ -2,6 +2,7 @@
 
 # Verifica que se haya proporcionado un argumento (ID de proceso).
 if [ $# -ne 1 ]; then
+    echo "Error, ingrese el ID del proceso"
     echo "Uso: $0 <ID_de_proceso>"
     exit 1
 fi
