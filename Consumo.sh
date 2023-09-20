@@ -1,55 +1,55 @@
 #!/bin/bash
 
-# Comprueba si se proporcionó un argumento (el ejecutable a monitorear).
 if [ $# -ne 1 ]; then
-    echo "Uso: $0 <ejecutable>"
-    exit 1
+  echo "Error, ingrese el nombre del ejecutable &"
+  echo "Uso: $0 <nombre_del_ejecutable> &"
+  exit 1
 fi
 
-# Nombre del ejecutable a monitorear.
+# Duración del monitoreo en segundos
+tiempo_monitoreo=120  # 2 minutos
+
+# Nombre del ejecutable
 ejecutable="$1"
 
-# Nombre del archivo de registro.
-log_file="registro.txt"
+# Nombre del archivo de registro
+log_file="registro.log"
 
-# Intervalo de tiempo entre las lecturas de uso de CPU y memoria (en segundos).
-intervalo=1
+# Obtener el tiempo actual en segundos, desde el inicio del sistema
+tiempo_inicio=$(awk '{print int($1)}' /proc/uptime)
 
-# Tiempo máximo de ejecución del proceso (en segundos).
-tiempo_maximo=60
+# Función para verificar si el proceso sigue en ejecución
+proceso() {
+  pgrep "$ejecutable" > /dev/null
+}
 
-# Inicializa el archivo de registro.
-echo "Tiempo CPU Memoria" > "$log_file"
+# Inicializar el archivo de registro con encabezados si no existe
+if [ ! -e "$log_file" ]; then
+  echo "Tiempo CPU Memoria" > "$log_file"
+fi
 
-# Inicia el proceso y obtiene su PID.
-./$ejecutable &
-pid=$!
-
-# Monitorea el proceso durante el tiempo especificado.
-contador=0
-while [ $contador -lt $tiempo_maximo ]; do
-    tiempo_actual=$(date "+%H:%M:%S")
-    uso_cpu=$(ps -p $pid -o %cpu | tail -n 1)
-    uso_memoria=$(ps -p $pid -o %mem | tail -n 1)
-    echo "$tiempo_actual $uso_cpu $uso_memoria" >> "$log_file"
-    sleep $intervalo
-    contador=$((contador + $intervalo))
+# Se monitorea el proceso
+while proceso; do
+  tiempo_actual=$(awk '{print int($1)}' /proc/uptime)
+  delta_tiempo=$((tiempo_actual - tiempo_inicio))
+  if [ "$delta_tiempo" -le "$tiempo_monitoreo" ]; then
+    ps -C "$ejecutable" -o %cpu,%mem | tail -n 1 >> "$log_file"
+    sleep 1
+  else
+    break
+  fi
 done
 
-# Detiene el proceso.
-kill $pid
-
-# Grafica los valores utilizando Gnuplot.
+# Generar la gráfica con Gnuplot
 gnuplot <<EOF
-set xlabel "Tiempo"
-set ylabel "Porcentaje"
-set title "Consumo de CPU y Memoria"
 set terminal png
-set output "grafico.png"
-plot "$log_file" using 1:2 with lines title "CPU", \
-     "$log_file" using 1:3 with lines title "Memoria"
+set output 'Grafica_Consumo.png'
+set title 'Consumo de CPU y Memoria del ejecutable "$ejecutable"'
+set xlabel 'Tiempo (s)'
+set ylabel 'Valor Porcentual'
+plot "$log_file" using 1 with lines title 'CPU', \
+     "$log_file" using 2 with lines title 'Memoria'
 EOF
 
-echo "Proceso finalizado. Se ha generado un archivo de registro y un gráfico."
-
-exit 0
+echo "El monitoreo ha finalizado y se ha generado una gráfica en 'Grafica_Consumo.png'."
+echo "Presione Crtl+C para salir del programa"
